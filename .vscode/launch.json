@@ -1,0 +1,13 @@
+{
+    "name": "Debug Android",
+    "program": "${workspaceFolder}/.vscode/.react",
+    "type": "reactnative",
+    "request": "launch",
+    "platform": "android",
+    "configurations": [
+      
+
+
+    ]
+  }
+  

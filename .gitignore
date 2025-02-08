@@ -1,0 +1,8 @@
+ai_engine/venv/
+storage/input/person1
+storage/input/person2
+storage/output/person2
+unity_project/
+build/
+ai_engine/modules/pose_estimation/openpose
+ai_engine/modules/smpl/smplify-x
