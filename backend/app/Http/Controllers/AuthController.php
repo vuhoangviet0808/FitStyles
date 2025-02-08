@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -31,5 +32,24 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'User registered successfully!', 'user' => $user], 201);
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
+
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid email or password',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'user' => auth()->user(),
+            'token' => $token
+        ], 200);
     }
 }

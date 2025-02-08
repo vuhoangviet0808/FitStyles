@@ -1,35 +1,60 @@
-import React from 'react';
+import React, { useState} from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, StyleSheet } from 'react-native';
 import { globalStyles, colors } from '../theme/globalStyles';
 import {useNavigation} from '@react-navigation/native';
 
+import { loginUser } from '../services/authService';
+
 export default function LoginScreen() {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await loginUser(email, password);
+      if (response.success) {
+        navigation.replace('Home'); // Chuyển đến HomeScreen
+      } else {
+        Alert.alert('Login Failed', response.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong.');
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../assets/images/backgroundbrown.jpg')}
-        style={styles.topBackground}
-        resizeMode="cover"
-      >
+      <ImageBackground source={require('../assets/images/backgroundbrown.jpg')} style={styles.topBackground} resizeMode="cover">
         <Text style={styles.headerTitle}>Welcome{"\n"}Back!</Text>
       </ImageBackground>
-      <ImageBackground
-        source={require('../assets/images/backgroundwhite.jpg')} 
-        style={styles.bottomBackground}
-        resizeMode="cover"
-      >
+      <ImageBackground source={require('../assets/images/backgroundwhite.jpg')} style={styles.bottomBackground} resizeMode="cover">
         <View style={styles.formContainer}>
           <Text style={globalStyles.label}>Email</Text>
           <View style={styles.inputWrapper}>
             <Image source={require('../assets/icon/email.png')} style={styles.icon} />
-            <TextInput style={styles.input} placeholder="Enter your Email Address" placeholderTextColor={colors.textDark}/>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your Email Address"
+              placeholderTextColor={colors.textDark}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
           </View>
 
           <Text style={globalStyles.label}>Password</Text>
           <View style={styles.inputWrapper}>
             <Image source={require('../assets/icon/lock.png')} style={styles.icon} />
-            <TextInput style={styles.input} placeholder="Enter your Password" secureTextEntry placeholderTextColor={colors.textDark}/>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your Password"
+              secureTextEntry
+              placeholderTextColor={colors.textDark}
+              value={password}
+              onChangeText={setPassword}
+            />
           </View>
           <View style={styles.rowContainer}>
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
@@ -39,14 +64,13 @@ export default function LoginScreen() {
           </View>
 
           <View style={{ alignItems: 'center' }}>
-            <TouchableOpacity style={globalStyles.button}>
+            <TouchableOpacity style={globalStyles.button} onPress={handleLogin}>
               <Text style={globalStyles.buttonText}>Sign In</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={globalStyles.horizontalLine} />
-
-          <Text style={styles.orText}>Or Sign In With</Text>
+          
+        </View>
+        <Text style={styles.orText}>Or Sign In With</Text>
 
           <View style={styles.socialContainer}>
             <TouchableOpacity style={styles.socialButton}>
@@ -59,11 +83,6 @@ export default function LoginScreen() {
               <Image source={require('../assets/icon/facebook.png')} style={styles.socialIcon} />
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
-        </View>
       </ImageBackground>
     </View>
   );
