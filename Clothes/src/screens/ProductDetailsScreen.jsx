@@ -2,6 +2,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useState } from "react";
 import Header from "../components/Header";
 import LinearGradient from 'react-native-linear-gradient';
+import { useRoute } from "@react-navigation/native";
 
 const imageUrl =
     "https://res.cloudinary.com/dlc5c1ycl/image/upload/v1710567613/vulb5bckiruhpzt2v8ec.png";
@@ -17,6 +18,9 @@ const colorsArray = [
     "#000000",
 ]
 const ProductDetailsScreen = () =>{
+    const route = useRoute();
+    const item = route.params.item;
+    
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     return (
@@ -27,12 +31,12 @@ const ProductDetailsScreen = () =>{
             <View style={styles.headerContainer}>
                 <Header/>
             </View>   
-            <Image source={{uri: imageUrl}} style={styles.coverImage}/>
+            <Image source={{uri: item.image}} style={styles.coverImage}/>
             <View style={styles.contentContainer}>
                 <Text style={styles.title}>
-                    Winter Coat
+                    {item.title}
                 </Text>
-                <Text style={[styles.title, styles.price]}>$65.9</Text>
+                <Text style={[styles.title, styles.price]}>${item.price}</Text>
             </View> 
 
             {/* Size container */}
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
         padding: 10,
         margin: 10,
         borderRadius: 20,
-        
+
         
     },
     buttonText: {

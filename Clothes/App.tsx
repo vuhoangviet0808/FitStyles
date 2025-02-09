@@ -15,6 +15,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import { Text } from 'react-native';
 import ProductDetailsScreen from './src/screens/ProductDetailsScreen';
+import CartScreen from './src/screens/CartScreen';
 
 
 
@@ -51,7 +52,7 @@ function HomeTabs() {
           return <MaterialIcons name={"reorder"} size={size} color={color}/>
         },
       }}/>
-      <Tab.Screen name="CART" component={HomeScreen} options={{
+      <Tab.Screen name="CART" component={CartScreen} options={{
          tabBarIcon:({size, focused, color})=>{
           return <MaterialCommunityIcons name={"cart"} size={size} color={color}/>
           
