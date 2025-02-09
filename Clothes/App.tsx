@@ -14,6 +14,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import { Text } from 'react-native';
+import ProductDetailsScreen from './src/screens/ProductDetailsScreen';
 
 
 
@@ -21,6 +22,14 @@ import { Text } from 'react-native';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+function HomeStackNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+    </Stack.Navigator>
+  );
+}
 
 function HomeTabs() {
   return (
@@ -31,7 +40,7 @@ function HomeTabs() {
         tabBarActiveTintColor: "#a52a2a",
       }}
     >
-      <Tab.Screen name="HOME" component={HomeScreen} options={{
+      <Tab.Screen name="HOME" component={HomeStackNavigator} options={{
         tabBarIcon:({size, focused, color})=>{
           return <Entypo name={"home"} size={size} color={color}/>
           
@@ -57,7 +66,13 @@ function HomeTabs() {
     </Tab.Navigator>
   );
 }
-
+function HomeStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeTabs" component={HomeTabs} />
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   return (
@@ -67,8 +82,9 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignUp" component={RegisterScreen} />
         {/* Sau khi login, HomeTabs sẽ xuất hiện */}
-        <Stack.Screen name="Home" component={HomeTabs} />
+        <Stack.Screen name="Home" component={HomeStack} />
+        
       </Stack.Navigator>
     </NavigationContainer>
-  );
+  );  
 }
