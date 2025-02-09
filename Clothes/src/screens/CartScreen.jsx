@@ -1,28 +1,35 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import React from "react";
+import React, { useContext } from "react";
 import LinearGradient from "react-native-linear-gradient";
 import Header from "../components/Header";
 import CartCard from "../components/CartCard";
 import { FlatList } from "react-native-gesture-handler";
+import { CartContext } from "../context/CartContext";
 
 
 const CartScreen = () =>{
+    const { carts, totalPrice, deleteItemFromCart } = useContext(CartContext);
+
+
     return (
        <LinearGradient colors={['#FDF0F3', '#FFFBFC']} style={styles.container}>
             <View style={styles.headerContainer}>
                 <Header isCart = {true}/>
             </View>
-            <FlatList data={[1, 2, 2, 4, 5, 5]} 
+            <FlatList data={carts} 
                 ListHeaderComponent={<>
                         
                 </>}
-                renderItem={CartCard} 
+                renderItem={({item}) => (
+                    <CartCard item={item} 
+                    deleteItemFromCart={deleteItemFromCart}
+                />)} 
                 ListFooterComponent={
                     <>
                         <View style={styles.priceContainer}>
                             <View style={styles.priceAndTitle}>
                                 <Text style={styles.text}>Total: </Text>
-                                <Text style={styles.text}>$119.7 </Text>
+                                <Text style={styles.text}>${totalPrice}</Text>
                             </View>
                             <View style={styles.priceAndTitle}>
                                 <Text style={styles.text}>Shipping: </Text>
@@ -35,7 +42,7 @@ const CartScreen = () =>{
                                 <Text style={styles.text}>Grand Total: </Text>
                                 <Text style={[styles.text, {color: "black",
                                     fontWeight: "700"},
-                                ]}>$119.7</Text>
+                                ]}>${totalPrice}</Text>
                         </View>
                     </>
                 }
