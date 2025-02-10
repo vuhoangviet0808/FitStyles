@@ -41,6 +41,9 @@ const ProfileScreen = () => {
                                 if (item.label === "My Virtual Model") {
                                   navigation.navigate("VirtualModelScreen"); // Điều hướng đến trang trống
                                 }
+                                else if (item.label === "My Wardrobe") {
+                                    navigation.navigate("MyWardrobe"); // Điều hướng đến trang trống
+                                  }
                               }}    
                         >
                             <Ionicons name={item.icon} size={24} color="#000" style={styles.actionIcon} />
@@ -67,23 +70,23 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FDF0F3',
+        backgroundColor: "#FDF0F3",
     },
     headerContainer: {
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        backgroundColor: "#FDF0F3", 
-        position: "relative",
+        backgroundColor: "#FDF0F3",
         justifyContent: "space-between",
-        
+        position: "relative",
     },
     headerTitle: {
-        position: "absolute",
-        left: "35%",
         fontSize: 28,
         fontWeight: "300",
         color: "#000",
+        position: "absolute",
+        left: "50%",
+        transform: [{ translateX: -50 }], 
     },
     profileContainer: {
         flexDirection: "row",

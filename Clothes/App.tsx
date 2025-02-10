@@ -22,6 +22,7 @@ import { View } from 'react-native';
 import FavouriteScreen from './src/screens/FavouriteScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import VirtualModelScreen from './src/screens/profile/VirtualModelScreen';
+import MyWardrobeScreeen from './src/screens/profile/MyWardrobeScreen';
 
 
 
@@ -43,6 +44,7 @@ function ProfileStackNavigator(){
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="VirtualModelScreen" component={VirtualModelScreen}/>
+      <Stack.Screen name="MyWardrobe" component={MyWardrobeScreeen} />
     </Stack.Navigator>
   );
 }
