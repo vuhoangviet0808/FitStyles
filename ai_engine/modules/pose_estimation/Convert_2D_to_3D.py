@@ -8,7 +8,6 @@ STANDARD_HEIGHT = 1.7
 OUTPUT_DIR = os.path.abspath("./storage/output")
 
 def load_keypoints(json_path):
-    """ Đọc keypoints 2D từ OpenPose JSON """
     with open(json_path, 'r') as f:
         data = json.load(f)
     if len(data["people"]) == 0:
