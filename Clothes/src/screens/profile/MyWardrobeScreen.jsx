@@ -3,11 +3,19 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, FlatList }
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Category from "../../components/Category";
 
 const MyWardrobeScreen = () => {
     const navigation = useNavigation();
-    const [uploadedClothes, setUploadedClothes] = useState([]);
-    const [isUploading, setIsUploading] = useState(true);
+    const categories = [
+        { name: "All", count: 23 },
+        { name: "Shirt", count: 10 },
+        { name: "Pants", count: 4 },
+        { name: "Skirt", count: 4 },
+        { name: "Trousers", count: 2 },
+        { name: "Jackets", count: 3 },
+    ];
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     const images = [
         require("../../assets/jacket1.png"),
@@ -16,59 +24,50 @@ const MyWardrobeScreen = () => {
         require("../../assets/shirt1.png"),
         require("../../assets/shirt2.png"),
         require("../../assets/skirt1.png"),
+        require("../../assets/jacket1.png"),
+        require("../../assets/pants1.png"),
+        require("../../assets/pants2.png"),
+        require("../../assets/shirt1.png"),
+        require("../../assets/shirt2.png"),
+        require("../../assets/skirt1.png"),
     ];
     return (
-        // <ScrollView style={styles.container}>
-        //     {/* Header */}
-        //     <View style={styles.headerContainer}>
-        //         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.appIconContainer}>
-        //             <Ionicons name="chevron-back" size={24} color="#A36A2C" />
-        //         </TouchableOpacity>
-        //         <Text style={styles.headerTitle}>My wardrobe</Text>
-        //     </View>
 
-        //     {/* Upload Clothes Section */}
-        //     <Text style={styles.subTitle}>Upload your clothes</Text>
-
-
-        //         <View style={styles.wardrobeList}>
-        //             <View style={styles.categoryBar}>
-        //                 <Text>Shirt: 10</Text>
-        //                 <Text>Pants: 4</Text>
-        //                 <Text>Skirt: 4</Text>
-        //                 <Text>Trousers: 2</Text>
-        //                 <Text>Jackets: 3</Text>
-        //                 <TouchableOpacity style={styles.newCategoryButton}>
-        //                     <Text>+ New</Text>
-        //                 </TouchableOpacity>
-        //             </View>
-        //             <FlatList
-        //                 data={images}
-        //                 numColumns={2} // Chia làm 2 cột
-        //                 keyExtractor={(item, index) => index.toString()}
-        //                 renderItem={({ item }) => (
-        //                     <Image source={item} style={styles.imageItem} />
-        //                 )}
-        //                 // nestedScrollEnabled={true}
-        //                 keyboardShouldPersistTaps="handled"
-        //             />
-        //             <TouchableOpacity style={styles.uploadMoreButton}>
-        //                 <Text style={styles.buttonText}>Upload more</Text>
-        //             </TouchableOpacity>
-        //         </View>
-
-        // </ScrollView>
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.headerContainer}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.appIconContainer}>
-                    <Ionicons name="chevron-back" size={24} color="#A36A2C" />
+                    <Ionicons name="chevron-back" size={24} color="#E96E6E" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>My wardrobe</Text>
             </View>
 
             {/* Upload Clothes Section */}
-            <Text style={styles.subTitle}>Upload your clothes</Text>
+            {/* <Text style={styles.subTitle}>Upload your clothes</Text> */}
+
+            {/* Category Bar */}
+           
+            <FlatList
+                data={categories}
+                horizontal={true} // Hiển thị danh mục theo chiều ngang
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => index.toString()}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 30  }}
+                renderItem={({ item }) => {
+                    const isSelected = selectedCategory === item.name;
+                    return (
+                        <TouchableOpacity
+                            style={[styles.categoryButton, isSelected && styles.selectedCategory]}
+                            onPress={() => setSelectedCategory(item.name)}
+                        >
+                            <Text style={[styles.categoryText, isSelected && styles.selectedText]}>
+                                {item.name}: {item.count}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                }}
+                
+            />
 
             <FlatList
                 data={images}
@@ -77,7 +76,7 @@ const MyWardrobeScreen = () => {
                 renderItem={({ item }) => (
                     <Image source={item} style={styles.imageItem} />
                 )}
-                contentContainerStyle={{ paddingBottom: 80 }} // Để tránh che mất item cuối cùng
+                contentContainerStyle={{ paddingBottom: 80 }} 
             />
 
             {/* Nút Upload More cố định dưới màn hình */}
@@ -99,7 +98,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        justifyContent: "center"
+        backgroundColor: "#FDF0F3",
+        justifyContent: "space-between",
+        position: "relative",
+        marginVertical: 20,
+
     },
     appIconContainer: {
         position: "absolute",
@@ -109,15 +112,18 @@ const styles = StyleSheet.create({
         borderRadius: 22
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#A36A2C"
+        fontSize: 28,
+        fontWeight: "300",
+        color: "#000",
+        position: "absolute",
+        left: "50%",
+        transform: [{ translateX: -50 }],
     },
     subTitle: {
         marginLeft: 16,
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: "bold",
-        color: "#A36A2C"
+        color: "black"
     },
     uploadContainer: {
         alignItems: "center",
@@ -145,22 +151,40 @@ const styles = StyleSheet.create({
         color: "#FFF",
         fontWeight: "bold",
     },
-    wardrobeList: {
-        padding: 16
-    },
+
     categoryBar: {
+        marginVertical: 10,
+        paddingHorizontal: 16,
         flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: 10
+        gap: 10,  // Thêm khoảng cách giữa các button
     },
-    newCategoryButton: {
-        backgroundColor: "#DDD",
-        padding: 5,
-        borderRadius: 5
+    categoryButton: {
+        minHeight: 45,  // Tăng chiều cao để tránh bị cắt chữ
+        minWidth: 100,  // Đảm bảo chiều rộng phù hợp
+        backgroundColor: "#EEE",
+        paddingVertical: 12,
+        paddingHorizontal: 20,  // Tăng padding ngang để chữ không bị dính mép
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        marginHorizontal: 5, // Khoảng cách giữa các button
+    },
+    categoryText: {
+        fontSize: 16,
+        fontWeight: "500",  // Giúp chữ rõ nét hơn
+        color: "#555",
+        textAlign: "center",  // Đảm bảo chữ nằm giữa
+    },
+    selectedCategory: {
+        backgroundColor: "#E96E6E",
+    },
+
+    selectedText: {
+        color: "#FFF",
     },
 
     uploadMoreButton: {
-        backgroundColor: "#A36A2C",
+        backgroundColor: "#E96E6E",
         padding: 10,
         marginVertical: 10,
         marginHorizontal: 10,
@@ -175,7 +199,7 @@ const styles = StyleSheet.create({
         margin: 10,
     },
     imageItem: {
-        width: "45%",  // Điều chỉnh kích thước ảnh phù hợp
+        width: "45%",
         height: 200,
         margin: 10,
         borderRadius: 10,
