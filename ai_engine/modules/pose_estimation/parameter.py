@@ -2,13 +2,21 @@ import numpy as np
 from ai_engine.modules.pose_estimation.Convert_2D_to_3D import get_keypoints_from_openpose, load_keypoints
 import os
 import json
+import smplx
+import torch
+import numpy as np
+import trimesh
+import os
+import json
 OUTPUT_DIR = os.path.abspath("./storage/output")
+model_path = os.path.abspath("./ai_engine/modules/smpl/smplify-x/models/smplx/SMPLX_NEUTRAL.pkl")
+model_folder = os.path.abspath("./ai_engine/modules/smpl/smplify-x/models/")
 
 def euclidean_dist(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
 
 
-def calculate_body_legnth(image_path, height):
+def calculate_body_length(image_path, height):
     front, back = get_keypoints_from_openpose(image_path)
     front_keypoints = load_keypoints(front)
     back_keypoints = load_keypoints(back)
@@ -103,26 +111,97 @@ def calculate_body_parameter( image_path ,height, weight, sex='Male'):
     output_folder = os.path.abspath(os.path.join(OUTPUT_DIR, base_name))
 
 
-def export_to_json_with_measurements(image_path,height, weight, sex='Male'):
-    base_name = os.path.splitext(os.path.basename(image_path))[0]
-    output_folder = os.path.abspath(os.path.join(OUTPUT_DIR, base_name))
-    body_length = calculate_body_legnth(image_path, height)
-    measurements = calculate_bode_weight(height, weight, sex)
-    body_data = {
-        "height": height,
-        "weight": weight,
-        "sex": sex,
-        "measurements": measurements,  # Thêm số đo 3 vòng
-        "body_ratios": body_length  # Thêm các tỷ lệ chiều dài cơ thể
+# def export_to_json_with_measurements(image_path,height, weight, sex='Male'):
+#     base_name = os.path.splitext(os.path.basename(image_path))[0]
+#     output_folder = os.path.abspath(os.path.join(OUTPUT_DIR, base_name))
+#     body_length = calculate_body_length(image_path, height)
+#     measurements = calculate_bode_weight(height, weight, sex)
+#     body_data = {
+#         "height": height,
+#         "weight": weight,
+#         "sex": sex,
+#         "measurements": measurements,  # Thêm số đo 3 vòng
+#         "body_ratios": body_length  # Thêm các tỷ lệ chiều dài cơ thể
+#     }
+
+#     output_path = os.path.join(output_folder,"body_data_with_ratios.json") 
+#     with open(output_path, "w") as json_file:
+#         json.dump(body_data, json_file, indent=4)
+
+# if __name__ == "__main__":
+#     height = 1.75
+#     weight = 70
+#     sex = "Male"
+#     image_path = os.path.abspath("./storage/input/person2/person2.jpg")
+#     export_to_json_with_measurements(image_path,height, weight, sex)
+
+
+def estimate_body_depth_width(measurements):
+    """
+    Tính toán chiều rộng (W) và chiều sâu (D) từ số đo ba vòng.
+    Chiều sâu ước lượng từ số đo ba vòng (ngực, eo, hông) như sau:
+    """
+    body_dimensions = {}
+
+    # Tính chiều sâu và chiều rộng cho các bộ phận cơ thể
+    body_dimensions['chest'] = {
+        'depth': measurements['chest'] * 0.3,  # 30% của vòng ngực
+        'width': measurements['chest'] * 0.5  # 50% của vòng ngực (giả định)
+    }
+    body_dimensions['waist'] = {
+        'depth': measurements['waist'] * 0.25,  # 25% của vòng eo
+        'width': measurements['waist'] * 0.5  # 50% của vòng eo (giả định)
+    }
+    body_dimensions['hip'] = {
+        'depth': measurements['hip'] * 0.3,  # 30% của vòng hông
+        'width': measurements['hip'] * 0.5  # 50% của vòng hông (giả định)
     }
 
-    output_path = os.path.join(output_folder,"body_data_with_ratios.json") 
-    with open(output_path, "w") as json_file:
-        json.dump(body_data, json_file, indent=4)
+    return body_dimensions
 
+# Hàm ước lượng tọa độ các khớp xương của SMPL từ số đo cơ thể
+def smpl_joints_to_parameters(body_length, body_measurements):
+    betas = torch.zeros(1, 10)  # Shape coefficients (betas) cho SMPL-X
+    pose = torch.zeros(1, 21, 3)  # Body pose (21 khớp, mỗi khớp có 3 tham số góc xoay)
+
+    betas[:, 0] = body_measurements['chest'] * 0.01  # Ứớc tính shape từ vòng ngực
+    betas[:, 1] = body_measurements['waist'] * 0.01  # Ứớc tính shape từ vòng eo
+    betas[:, 2] = body_measurements['hip'] * 0.01  # Ứớc tính shape từ vòng hông
+
+    # Pose giả định (ở đây mặc định là 0, có thể thay bằng dữ liệu thực tế nếu có)
+    pose = torch.zeros(21, 1, 3)
+
+    return betas, pose
+
+
+def create_smplx_model(betas, pose):
+    smplx_model = smplx.create(model_folder, model_type='smplx', gender='male', use_pca=False)
+    
+    # Tạo mô hình 3D từ betas và pose
+    output = smplx_model.forward(betas=betas, body_pose=pose, global_orient=pose)
+    
+    vertices = output.vertices.detach().cpu().numpy().squeeze()
+    return vertices, smplx_model.faces
+
+
+def display_3d_model(vertices, faces):
+    mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+    mesh.show()
+
+
+# Ví dụ chạy thử
 if __name__ == "__main__":
     height = 1.75
     weight = 70
     sex = "Male"
     image_path = os.path.abspath("./storage/input/person2/person2.jpg")
-    export_to_json_with_measurements(image_path,height, weight, sex)
+
+    body_length = calculate_body_length(image_path, height)
+    body_measurements = calculate_bode_weight(height, weight, sex)
+
+    # Tạo betas và pose từ các số đo cơ thể
+    betas, pose = smpl_joints_to_parameters(body_length, body_measurements)
+
+    # Tạo mô hình SMPL-X và hiển thị mô hình 3D
+    vertices, faces = create_smplx_model(betas, pose)
+    display_3d_model(vertices, faces)
