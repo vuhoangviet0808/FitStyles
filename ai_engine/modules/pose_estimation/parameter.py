@@ -161,24 +161,23 @@ def estimate_body_depth_width(measurements):
 
 # Hàm ước lượng tọa độ các khớp xương của SMPL từ số đo cơ thể
 def smpl_joints_to_parameters(body_length, body_measurements):
-    betas = torch.zeros(1, 10)  # Shape coefficients (betas) cho SMPL-X
+    betas = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
     pose = torch.zeros(1, 21, 3)  # Body pose (21 khớp, mỗi khớp có 3 tham số góc xoay)
 
-    betas[:, 0] = body_measurements['chest'] * 0.01  # Ứớc tính shape từ vòng ngực
-    betas[:, 1] = body_measurements['waist'] * 0.01  # Ứớc tính shape từ vòng eo
-    betas[:, 2] = body_measurements['hip'] * 0.01  # Ứớc tính shape từ vòng hông
+    betas[0] = body_measurements['chest'] * 0.01  # Ứớc tính shape từ vòng ngực
+    betas[1] = body_measurements['waist'] * 0.01  # Ứớc tính shape từ vòng eo
+    betas[2] = body_measurements['hip'] * 0.01  # Ứớc tính shape từ vòng hông
 
-    # Pose giả định (ở đây mặc định là 0, có thể thay bằng dữ liệu thực tế nếu có)
-    pose = torch.zeros(21, 1, 3)
+    pose = torch.zeros(1, 63, dtype=torch.float32)
 
     return betas, pose
 
 
 def create_smplx_model(betas, pose):
-    smplx_model = smplx.create(model_folder, model_type='smplx', gender='male', use_pca=False)
+    device = torch.device("cpu")
+    smplx_model = smplx.create(model_folder, model_type='smplx', gender='male', use_pca=False).to(device)
     
-    # Tạo mô hình 3D từ betas và pose
-    output = smplx_model.forward(betas=betas, body_pose=pose, global_orient=pose)
+    output = smplx_model.forward(betas=betas.unsqueeze(0), body_pose=pose)
     
     vertices = output.vertices.detach().cpu().numpy().squeeze()
     return vertices, smplx_model.faces
@@ -195,7 +194,9 @@ if __name__ == "__main__":
     weight = 70
     sex = "Male"
     image_path = os.path.abspath("./storage/input/person2/person2.jpg")
-
+    base_name = os.path.splitext(os.path.basename(image_path))[0]
+    path = os.path.abspath(os.path.dirname(image_path))
+    output_path = os.path.abspath(os.path.join(OUTPUT_DIR, base_name))
     body_length = calculate_body_length(image_path, height)
     body_measurements = calculate_bode_weight(height, weight, sex)
 
@@ -204,4 +205,15 @@ if __name__ == "__main__":
 
     # Tạo mô hình SMPL-X và hiển thị mô hình 3D
     vertices, faces = create_smplx_model(betas, pose)
+    obj_filename = f"{output_path}/smpl_model.obj"
+    with open(obj_filename, "w") as f:
+        # Ghi vertices (đỉnh)
+        for v in vertices:
+            f.write(f"v {v[0]} {v[1]} {v[2]}\n")
+
+        # Ghi faces (mặt tam giác)
+        for face in faces:
+            f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1}\n")
+
+    print(f"✅ Đã tạo mô hình SMPL và lưu vào {obj_filename}")
     display_3d_model(vertices, faces)

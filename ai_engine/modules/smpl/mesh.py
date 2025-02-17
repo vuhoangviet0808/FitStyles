@@ -6,6 +6,7 @@ import os
 import pickle
 from scipy.spatial.transform import Rotation as R
 from ai_engine.modules.pose_estimation.Convert_2D_to_3D import convert_2D_3D
+from ai_engine.modules.pose_estimation.parameter import export_smpl_joints_to_json
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
