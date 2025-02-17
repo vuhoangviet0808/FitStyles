@@ -1,3 +1,5 @@
 torch
 numpy
 opencv-python
+pyglet<2
+trimesh
