@@ -2,9 +2,9 @@ import os
 import json
 import subprocess
 import shutil
-IMAGE_DIR = os.path.abspath("./storage/input")
-OUTPUT_DIR = os.path.abspath("./storage/output")
-MODEL_DIR = os.path.abspath("./ai_engine/modules/pose_estimation/openpose/models")
+from ai_engine.config import OUTPUT_DIR, IMAGE_DIR, MODEL_OPENPOSE_DIR
+
+MODEL_DIR = MODEL_OPENPOSE_DIR
 
 #Ham chay openpose len tat ca file anh trong 1 folder
 def run_openpose(image_path):
@@ -44,30 +44,30 @@ def get_keypoints_from_openpose(image_path, take_keypoints=False):
 
 
     old_keypoints_1 = os.path.join(output_folder, f"{base_name}_keypoints.json")
-    old_keypoints_2 = os.path.join(output_folder, f"{base_name}back_keypoints.json")
+    # old_keypoints_2 = os.path.join(output_folder, f"{base_name}back_keypoints.json")
     
     new_keypoints_1 = os.path.join(output_folder, "front.json")
-    new_keypoints_2 = os.path.join(output_folder, "back.json")
+    # new_keypoints_2 = os.path.join(output_folder, "back.json")
 
-    if not os.path.exists(new_keypoints_1) or not os.path.exists(new_keypoints_2):
+    if not os.path.exists(new_keypoints_1): #or not os.path.exists(new_keypoints_2):
         run_openpose(image_path)
 
     if os.path.exists(old_keypoints_1):
         shutil.move(old_keypoints_1, new_keypoints_1)
-    if os.path.exists(old_keypoints_2):
-        shutil.move(old_keypoints_2, new_keypoints_2)
+    # if os.path.exists(old_keypoints_2):
+    #     shutil.move(old_keypoints_2, new_keypoints_2)
 
 
-    if not os.path.exists(new_keypoints_1) or not os.path.exists(new_keypoints_2):
+    if not os.path.exists(new_keypoints_1): #or not os.path.exists(new_keypoints_2):
         print(f"❌ Không tìm thấy file keypoints cho ảnh {image_path}.")
         return None
 
-    with open(new_keypoints_1, 'r') as f1, open(new_keypoints_2, 'r') as f2:
-        keypoints_2d = [json.load(f1), json.load(f2)]
+    with open(new_keypoints_1, 'r') as f1: #, open(new_keypoints_2, 'r') as f2:
+        keypoints_2d = json.load(f1)#, json.load(f2)]
 
     if take_keypoints:
         return keypoints_2d
-    return new_keypoints_1, new_keypoints_2
+    return new_keypoints_1#, new_keypoints_2
 
 
 
