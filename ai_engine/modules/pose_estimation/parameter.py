@@ -1,5 +1,6 @@
 import numpy as np
 from ai_engine.modules.pose_estimation.Convert_2D_to_3D import get_keypoints_from_openpose, load_keypoints
+from ai_engine.config import OUTPUT_DIR, MODEL_SMPLX_PATH, MODEL_SMPLX_DIR
 import os
 import json
 import smplx
@@ -14,19 +15,16 @@ import json
 from scipy.optimize import minimize
 #import numpy as np
 
-
-OUTPUT_DIR = os.path.abspath("./storage/output")
-model_path = os.path.abspath("./ai_engine/modules/smpl/smplify-x/models/smplx/SMPLX_NEUTRAL.pkl")
-model_folder = os.path.abspath("./ai_engine/modules/smpl/smplify-x/models/")
+model_path = MODEL_SMPLX_PATH
+model_folder = MODEL_SMPLX_DIR
 
 def euclidean_dist(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
 
 
 def calculate_body_length(image_path, height):
-    front, back = get_keypoints_from_openpose(image_path)
+    front = get_keypoints_from_openpose(image_path)
     front_keypoints = load_keypoints(front)
-    back_keypoints = load_keypoints(back)
 
     keypoints = np.array(front_keypoints)
 
@@ -194,14 +192,15 @@ def loss_funtion(model ,betas, body_length, body_weight):
         + (predicted_waist_width - body_weight['waist'])**2
         + (predicted_hips_width - body_weight['hip'])**2
     )
-    return loss
+    return -loss
 
 
 def smpl_joints_to_parameters(model ,body_length, body_weight):
     # initial_betas = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
     initial_betas = np.zeros(10, dtype = np.float32)
     loss_func_with_params = lambda betas: loss_funtion(model, betas, body_length, body_weight) 
-    result = minimize(loss_func_with_params, initial_betas, method = "L-BFGS-B")
+    bounds = [(-1, 1)]*10
+    result = minimize(loss_func_with_params, initial_betas, method = "Powell", bounds = bounds)
 
     optimal_betas = torch.tensor(result.x, dtype=torch.float32)
 
@@ -233,7 +232,7 @@ def display_3d_model(vertices, faces):
 
 # Ví dụ chạy thử
 if __name__ == "__main__":
-    height = 1.75
+    height = 1.65
     weight = 70
     sex = "Male"
     image_path = os.path.abspath("./storage/input/person2/person2.jpg")
@@ -246,7 +245,7 @@ if __name__ == "__main__":
     smplx_model = smplx.create(model_folder, model_type='smplx', gender=sex, use_pca=False).to(device)
     
     betas, pose = smpl_joints_to_parameters(smplx_model, body_length, body_measurements)
-
+    print(betas)
     # Tạo mô hình SMPL-X và hiển thị mô hình 3D
     vertices, faces = create_smplx_model(smplx_model,betas, pose)
     obj_filename = f"{output_path}/smpl_model.obj"
