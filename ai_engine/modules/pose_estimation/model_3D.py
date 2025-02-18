@@ -5,7 +5,7 @@ import numpy as np
 import os
 from ai_engine.config import OUTPUT_DIR, MODEL_SMPLX_DIR
 from ai_engine.modules.pose_estimation.parameter import calculate_bode_weight, calculate_body_length
-
+import trimesh
 
 def loss_funtion(model ,betas, body_length, body_weight):
     betas = torch.tensor(betas).float().unsqueeze(0)
