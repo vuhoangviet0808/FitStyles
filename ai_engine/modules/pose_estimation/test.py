@@ -17,14 +17,13 @@ class BetasPredictor(nn.Module):
             nn.Linear(128, 256),
             nn.ReLU(),
             nn.Linear(256, output_dim),
-            nn.Sigmoid()
         )
 
     def forward(self, x):
-        return self.model(x)*3
+        return self.model(x)
 
 
-num_betas =100
+num_betas =200
 smplx_model = smplx.create(MODEL_SMPLX_DIR, model_type='smplx', gender="male", num_betas = num_betas, use_pca=False)
 
 def loss_function(betas, model, body_length, body_measurements):
@@ -57,7 +56,7 @@ def loss_function(betas, model, body_length, body_measurements):
 
     return loss
 
-def train_betas_nn(model, smplx_model, body_length, body_measurements, num_epochs=500, learning_rate=0.01):
+def train_betas_nn(model, smplx_model, body_length, body_measurements, num_epochs=500, learning_rate=1e-4):
     """
     Huấn luyện mạng Neural Network để tối ưu `betas` trong SMPL-X.
     """
@@ -69,6 +68,7 @@ def train_betas_nn(model, smplx_model, body_length, body_measurements, num_epoch
 
     # Optimizer & Loss
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
     loss_fn = nn.MSELoss()
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.7)
 
@@ -84,7 +84,7 @@ def train_betas_nn(model, smplx_model, body_length, body_measurements, num_epoch
         
         # Backpropagation
         loss.backward()
-        
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         # 🔥 Kiểm tra Gradient của Model
         # for name, param in model.named_parameters():
         #     if param.grad is not None:
@@ -115,8 +115,8 @@ def smpl_joints_to_parameters(model, body_length, body_measurements, num_iterati
         loss.backward()  # Tính gradient
         optimizer.step()  # Cập nhật betas
         scheduler.step()
-        # if (i + 1) % 20 == 0:  # In loss sau mỗi 20 vòng lặp
-        #     print(f"🔥 Iter {i+1}/{num_iterations}, Loss: {loss.item()}, Betas: {betas.detach().numpy()}")
+        if (i + 1) % 20 == 0:  # In loss sau mỗi 20 vòng lặp
+            print(f"🔥 Iter {i+1}/{num_iterations}, Loss: {loss.item()}")
 
     betas = betas.detach()  # Loại bỏ requires_grad
 
@@ -141,43 +141,43 @@ body_length = {
 }
 
 body_measurements = {
-    "chest": 75,  # Vòng ngực (cm)
-    "waist":20,  # Vòng eo (cm)
-    "hip": 50 # Vòng mông (cm)
+    "chest": 200,  # Vòng ngực (cm)
+    "waist":120,  # Vòng eo (cm)
+    "hip": 90 # Vòng mông (cm)
 }
 
 # Gọi hàm tối ưu bằng Adam
-betas, pose = smpl_joints_to_parameters(smplx_model, body_length, body_measurements)
+# betas, pose = smpl_joints_to_parameters(smplx_model, body_length, body_measurements)
 
-print("🔥 Betas tối ưu:", betas)
+# print("🔥 Betas tối ưu:", betas)
 
-# Sửa lỗi `RuntimeError`: Đảm bảo betas có đúng số chiều (1, 10)
-if betas.dim() == 2 and betas.shape[0] == 1:
-    betas = betas.squeeze(0)  # Chuyển từ (1, 10) thành (10,)
+# # Sửa lỗi `RuntimeError`: Đảm bảo betas có đúng số chiều (1, 10)
+# if betas.dim() == 2 and betas.shape[0] == 1:
+#     betas = betas.squeeze(0)  # Chuyển từ (1, 10) thành (10,)
 
-# Kiểm tra nếu mô hình yêu cầu `expression`
-expression = torch.zeros(1, 10, dtype=torch.float32)  # Biểu cảm khuôn mặt (SMPL-X cần điều này)
+# # Kiểm tra nếu mô hình yêu cầu `expression`
+# expression = torch.zeros(1, 10, dtype=torch.float32)  # Biểu cảm khuôn mặt (SMPL-X cần điều này)
 
-# Chạy mô hình với `betas`, `pose`, và `expression`
-output = smplx_model.forward(betas=betas.unsqueeze(0), body_pose=pose, expression=expression)
-
-# Hiển thị mô hình 3D sau khi tối ưu
-vertices = output.vertices.detach().cpu().numpy().squeeze()
-display_3d_model(vertices, smplx_model.faces)
-
-# betas_model = BetasPredictor(input_dim=7, output_dim=num_betas)
-
-# # Train NN để tìm `betas`
-# betas_opt = train_betas_nn(betas_model, smplx_model, body_length, body_measurements)
-
-# print("🔥 Betas tối ưu sau khi học bằng Neural Network:", betas_opt)
-
-# # Chạy SMPL-X với betas mới
-# pose = torch.zeros(1, 63, dtype=torch.float32)  # Pose mặc định
-# expression = torch.zeros(1, 10, dtype=torch.float32)  # Biểu cảm khuôn mặt
-
-# output = smplx_model.forward(betas=betas_opt, body_pose=pose)
+# # Chạy mô hình với `betas`, `pose`, và `expression`
+# output = smplx_model.forward(betas=betas.unsqueeze(0), body_pose=pose, expression=expression)
 
 # # Hiển thị mô hình 3D sau khi tối ưu
 # vertices = output.vertices.detach().cpu().numpy().squeeze()
 # display_3d_model(vertices, smplx_model.faces)
+
+betas_model = BetasPredictor(input_dim=7, output_dim=num_betas)
+
+# Train NN để tìm `betas`
+betas_opt = train_betas_nn(betas_model, smplx_model, body_length, body_measurements)
+
+print("🔥 Betas tối ưu sau khi học bằng Neural Network:", betas_opt)
+
+# Chạy SMPL-X với betas mới
+pose = torch.zeros(1, 63, dtype=torch.float32)  # Pose mặc định
+expression = torch.zeros(1, 10, dtype=torch.float32)  # Biểu cảm khuôn mặt
+
+output = smplx_model.forward(betas=betas_opt, body_pose=pose)
+
+# Hiển thị mô hình 3D sau khi tối ưu
+vertices = output.vertices.detach().cpu().numpy().squeeze()
+display_3d_model(vertices, smplx_model.faces)

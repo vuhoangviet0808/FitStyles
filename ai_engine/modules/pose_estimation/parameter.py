@@ -170,7 +170,7 @@ def estimate_body_depth_width(measurements):
 
     return body_dimensions
 
-def loss_funtion(model ,betas, body_length, body_weight):
+def loss_function(model ,betas, body_length, body_weight):
     betas = torch.tensor(betas).float().unsqueeze(0)
     output = model(betas=betas)
     joints = output.joints[0]
@@ -192,13 +192,13 @@ def loss_funtion(model ,betas, body_length, body_weight):
         + (predicted_waist_width - body_weight['waist'])**2
         + (predicted_hips_width - body_weight['hip'])**2
     )
-    return -loss
+    return loss
 
 
 def smpl_joints_to_parameters(model ,body_length, body_weight):
     # initial_betas = torch.tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float32)
     initial_betas = np.zeros(10, dtype = np.float32)
-    loss_func_with_params = lambda betas: loss_funtion(model, betas, body_length, body_weight) 
+    loss_func_with_params = lambda betas: loss_function(model, betas, body_length, body_weight) 
     bounds = [(-1, 1)]*10
     result = minimize(loss_func_with_params, initial_betas, method = "Powell", bounds = bounds)
 
@@ -213,7 +213,50 @@ def smpl_joints_to_parameters(model ,body_length, body_weight):
     pose = torch.zeros(1, 63, dtype=torch.float32)
 
     return optimal_betas, pose
+import torch.nn as nn
+import torch.optim as optim 
+def train_betas_nn(model, smplx_model, body_length, body_measurements, num_epochs=500, learning_rate=1e-4):
+    """
+    Huấn luyện mạng Neural Network để tối ưu `betas` trong SMPL-X.
+    """
+    # Chuyển input thành tensor
+    input_features = torch.tensor([
+        body_length["height"], body_length["arm"], body_length["shoulder"], body_length["leg"],
+        body_measurements["chest"], body_measurements["waist"], body_measurements["hip"]
+    ], dtype=torch.float32).unsqueeze(0)  # (1, 7)
 
+    # Optimizer & Loss
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    loss_fn = nn.MSELoss()
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.7)
+
+    # Train loop
+    for epoch in range(num_epochs):
+        optimizer.zero_grad()  # Xóa gradient cũ
+        
+        # Dự đoán `betas` từ mạng neural network
+        betas_pred = model(input_features)  # betas_pred có requires_grad=True
+
+        # Tính loss với SMPL-X
+        loss = loss_function(betas_pred, smplx_model, body_length, body_measurements)
+        
+        # Backpropagation
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        # 🔥 Kiểm tra Gradient của Model
+        # for name, param in model.named_parameters():
+        #     if param.grad is not None:
+        #         print(f"🔥 Gradient của {name}: {param.grad.norm().item()}")
+        
+        optimizer.step()
+        scheduler.step()
+        
+        if (epoch + 1) % 50 == 0:
+            # print(f"🔥 Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}")
+            print(f"{betas_pred}")
+
+    return betas_pred.detach()
 
 def create_smplx_model(model, betas, pose):
     # device = torch.device("cpu")
@@ -229,6 +272,22 @@ def display_3d_model(vertices, faces):
     mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
     mesh.show()
 
+class BetasPredictor(nn.Module):
+    def __init__(self, input_dim=7, output_dim=100):  # 7 input features (chiều cao, vòng eo, vòng mông, v.v.)
+        super(BetasPredictor, self).__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 128),
+            nn.Sigmoid(),
+            nn.Linear(128, 256),
+            nn.ReLU(),
+            nn.Linear(256, output_dim),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
 
 # Ví dụ chạy thử
 if __name__ == "__main__":
@@ -243,6 +302,8 @@ if __name__ == "__main__":
     body_measurements = calculate_bode_weight(height, weight, sex)
     device = torch.device("cpu")
     smplx_model = smplx.create(model_folder, model_type='smplx', gender=sex, use_pca=False).to(device)
+    # num_betas =200
+    # smplx_model = smplx.create(MODEL_SMPLX_DIR, model_type='smplx', gender="male", num_betas = num_betas, use_pca=False)
     
     betas, pose = smpl_joints_to_parameters(smplx_model, body_length, body_measurements)
     print(betas)
@@ -260,3 +321,20 @@ if __name__ == "__main__":
 
     print(f"✅ Đã tạo mô hình SMPL và lưu vào {obj_filename}")
     display_3d_model(vertices, faces)
+
+    # betas_model = BetasPredictor(input_dim=7, output_dim=num_betas)
+
+    # # Train NN để tìm `betas`
+    # betas_opt = train_betas_nn(betas_model, smplx_model, body_length, body_measurements)
+
+    # print("🔥 Betas tối ưu sau khi học bằng Neural Network:", betas_opt)
+
+    # # Chạy SMPL-X với betas mới
+    # pose = torch.zeros(1, 63, dtype=torch.float32)  # Pose mặc định
+    # expression = torch.zeros(1, 10, dtype=torch.float32)  # Biểu cảm khuôn mặt
+
+    # output = smplx_model.forward(betas=betas_opt, body_pose=pose)
+
+    # # Hiển thị mô hình 3D sau khi tối ưu
+    # vertices = output.vertices.detach().cpu().numpy().squeeze()
+    # display_3d_model(vertices, smplx_model.faces)
