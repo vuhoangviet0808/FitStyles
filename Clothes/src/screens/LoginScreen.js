@@ -1,5 +1,5 @@
 import React, { useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, StyleSheet } from 'react-native';
+import { View, Text, Alert, TextInput, TouchableOpacity, ImageBackground, Image, StyleSheet } from 'react-native';
 import { globalStyles, colors } from '../theme/globalStyles';
 import {useNavigation} from '@react-navigation/native';
 
@@ -14,7 +14,10 @@ export default function LoginScreen() {
     try {
       const response = await loginUser(email, password);
       if (response.success) {
-        navigation.replace('Home'); // Chuyển đến HomeScreen
+        Alert.alert('Login successful', 'Welcome!');
+        setTimeout(() => {
+        navigation.navigate('Home');
+      }, 2000);
       } else {
         Alert.alert('Login Failed', response.message);
       }

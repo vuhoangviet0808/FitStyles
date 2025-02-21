@@ -2,8 +2,9 @@ import React, { useState} from 'react';
 import { View, Text, TextInput, Alert, TouchableOpacity, ImageBackground, Image, StyleSheet } from 'react-native';
 import { globalStyles, colors } from '../theme/globalStyles';
 import { registerUser} from "../services/authService";
-
+import {useNavigation} from '@react-navigation/native';
 export default function RegisterScreen() {
+    const navigation = useNavigation();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,9 +22,12 @@ export default function RegisterScreen() {
             const result = await registerUser(name, email, password);
 
             if (result.ok) {
-                Alert.alert("Success", result.message);
+              Alert.alert('Register Successful', 'Welcome!');
+              setTimeout(() => {
+                navigation.navigate('Login');
+              }, 2000);
             } else {
-                Alert.alert("Error", result.message || "Something went wrong");
+                Alert.alert("Register Failed", result.message || "Something went wrong");
             }
         } catch (error) {
             console.error("Registration Error:", error);

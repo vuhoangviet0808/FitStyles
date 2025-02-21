@@ -11,19 +11,19 @@ export const registerUser = async (name, email, password) => {
         body: JSON.stringify({ name, email, password }),
       });
       
-      console.log("Raw response:", response);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      return await response.json();
+      const result = await response.json();
+      if (response.ok) {
+        return { ok: true, message: result.message, data: result.data };
+    } else {
+        return { ok: false, message: result.message || "Something went wrong" };
+    }
     } catch (error) {
       console.error("Network request failed:", error.message);
       throw error;
     }
   };
 
-export const loginUser = async (email, password) => {
+  export const loginUser = async (email, password) => {
     try {
         const response = await fetch(`${BASE_URL}/api/login`, {
             method: 'POST',
@@ -31,10 +31,21 @@ export const loginUser = async (email, password) => {
                 "Accept": "application/json",
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({email, password}),
+            body: JSON.stringify({ email, password }),
         });
 
-        return await response.json();
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      if (!responseText) {
+        throw new Error("Empty response from server.");
+      }
+      const result = JSON.parse(responseText);
+
+      return result;
+
     } catch (error) {
         console.error("Error:", error);
         throw error;
