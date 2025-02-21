@@ -204,14 +204,13 @@ def smpl_joints_to_parameters(model ,body_length, body_weight):
 
     optimal_betas = torch.tensor(result.x, dtype=torch.float32)
 
-    pose = torch.zeros(1, 63)  # Body pose (21 khớp, mỗi khớp có 3 tham số góc xoay)
-
-    # betas[0] = body_measurements['chest'] * 0.01  # Ứớc tính shape từ vòng ngực
-    # betas[1] = body_measurements['waist'] * 0.01  # Ứớc tính shape từ vòng eo
-    # betas[2] = body_measurements['hip'] * 0.01  # Ứớc tính shape từ vòng hông
-
+    pose = torch.zeros(1, 63) 
     pose = torch.zeros(1, 63, dtype=torch.float32)
+    pose[:,16*3] = -0.6
+    pose[:, 17*3] = 0.6
 
+    pose[:, 18*3] = -0.5
+    pose[:, 19*3] = 0.5
     return optimal_betas, pose
 import torch.nn as nn
 import torch.optim as optim 
@@ -311,11 +310,8 @@ if __name__ == "__main__":
     vertices, faces = create_smplx_model(smplx_model,betas, pose)
     obj_filename = f"{output_path}/smpl_model.obj"
     with open(obj_filename, "w") as f:
-        # Ghi vertices (đỉnh)
         for v in vertices:
             f.write(f"v {v[0]} {v[1]} {v[2]}\n")
-
-        # Ghi faces (mặt tam giác)
         for face in faces:
             f.write(f"f {face[0]+1} {face[1]+1} {face[2]+1}\n")
 
