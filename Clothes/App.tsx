@@ -6,6 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwsome6 from 'react-native-vector-icons/FontAwesome6';
 
@@ -18,6 +19,10 @@ import ProductDetailsScreen from './src/screens/ProductDetailsScreen';
 import CartScreen from './src/screens/CartScreen';
 import { CartContext, CartProvider } from './src/context/CartContext';
 import { View } from 'react-native';
+import FavouriteScreen from './src/screens/FavouriteScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import VirtualModelScreen from './src/screens/profile/VirtualModelScreen';
+import MyWardrobeScreeen from './src/screens/profile/MyWardrobeScreen';
 
 
 
@@ -30,6 +35,16 @@ function HomeStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
       <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function ProfileStackNavigator(){
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="VirtualModelScreen" component={VirtualModelScreen}/>
+      <Stack.Screen name="MyWardrobe" component={MyWardrobeScreeen} />
     </Stack.Navigator>
   );
 }
@@ -50,9 +65,9 @@ function HomeTabs() {
             
           },
         }} />
-        <Tab.Screen name="REORDER" component={HomeScreen} options={{
+        <Tab.Screen name="FAVOURITE" component={FavouriteScreen} options={{
           tabBarIcon:({size, color}) => {
-            return <MaterialIcons name={"reorder"} size={size} color={color}/>
+            return <AntDesign name={"heart"} size={size} color={color}/> 
           },
         }}/>
         <Tab.Screen name="CART" component={CartScreen} options={{
@@ -87,7 +102,7 @@ function HomeTabs() {
             );
           },
         }}/>
-        <Tab.Screen name="ACCOUNT" component={HomeScreen} options={{
+        <Tab.Screen name="PROFILE" component={ProfileStackNavigator} options={{
           tabBarIcon:({size, color})=>{
             return <FontAwsome6 name={"user"} size={size} color={color}/>
             

@@ -4,12 +4,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from "@react-navigation/native";
 
 
-const Header = ({isCart}) =>{
+const Header = ({isCart, isProfile}) =>{
     const navigation = useNavigation();
     return (
         <View style ={styles.container}>
             <TouchableOpacity onPress ={() => navigation.navigate("HOME")} style={styles.appIconContainer}>
-                {isCart?(
+                {isCart || isProfile?(
                      <Ionicons name={"chevron-back"} color={"#E96E6E"} size={24}/>
                 ) : (
                     <Image source={require("../assets/appIcon.png")} 
@@ -54,5 +54,6 @@ const styles = StyleSheet.create({
    myCart:{
     fontSize: 28,
     color: "black",
+    fontWeight:"300"
    }
 })

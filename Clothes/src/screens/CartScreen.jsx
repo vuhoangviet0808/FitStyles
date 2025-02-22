@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
         width: "100%",
         marginVertical: 10,
         borderRadius: 10, 
+        
     },
     buttonText:{
         fontSize: 25,
