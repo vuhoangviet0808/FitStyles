@@ -22,7 +22,9 @@ import { View } from 'react-native';
 import FavouriteScreen from './src/screens/FavouriteScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import VirtualModelScreen from './src/screens/profile/VirtualModelScreen';
-import MyWardrobeScreeen from './src/screens/profile/MyWardrobeScreen';
+import MyWardrobeScreen from './src/screens/profile/MyWardrobeScreen';
+import MyWardrobeUploadScreen from './src/screens/profile/MyWardrobeUploadScreen';
+import { WardrobeProvider } from './src/context/WardrobeContext';
 
 
 
@@ -39,12 +41,24 @@ function HomeStackNavigator() {
   );
 }
 
+function MyWardrobeStackNavigator(){
+  return (
+    <WardrobeProvider>
+        <Stack.Navigator>
+          <Stack.Screen name="MyWardrobeScreen" component={MyWardrobeScreen} />
+          <Stack.Screen name="MyWardrobeUploadScreen" component={MyWardrobeUploadScreen} />
+        </Stack.Navigator>
+
+    </WardrobeProvider>
+  );
+}
+
 function ProfileStackNavigator(){
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="VirtualModelScreen" component={VirtualModelScreen}/>
-      <Stack.Screen name="MyWardrobe" component={MyWardrobeScreeen} />
+      <Stack.Screen name="MyWardrobe" component={MyWardrobeStackNavigator} />
     </Stack.Navigator>
   );
 }

@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Category from "../../components/Category";
+import { useWardrobe } from "../../context/WardrobeContext";
 
 const MyWardrobeScreen = () => {
     const navigation = useNavigation();
@@ -17,22 +18,12 @@ const MyWardrobeScreen = () => {
     ];
     const [selectedCategory, setSelectedCategory] = useState(null);
 
-    const images = [
-        require("../../assets/jacket1.png"),
-        require("../../assets/pants1.png"),
-        require("../../assets/pants2.png"),
-        require("../../assets/shirt1.png"),
-        require("../../assets/shirt2.png"),
-        require("../../assets/skirt1.png"),
-        require("../../assets/jacket1.png"),
-        require("../../assets/pants1.png"),
-        require("../../assets/pants2.png"),
-        require("../../assets/shirt1.png"),
-        require("../../assets/shirt2.png"),
-        require("../../assets/skirt1.png"),
-    ];
-    return (
+    const { images } = useWardrobe();
 
+
+
+    return (
+        
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.headerContainer}>
@@ -46,13 +37,13 @@ const MyWardrobeScreen = () => {
             {/* <Text style={styles.subTitle}>Upload your clothes</Text> */}
 
             {/* Category Bar */}
-           
+
             <FlatList
                 data={categories}
                 horizontal={true} // Hiển thị danh mục theo chiều ngang
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 30  }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 30 }}
                 renderItem={({ item }) => {
                     const isSelected = selectedCategory === item.name;
                     return (
@@ -66,10 +57,10 @@ const MyWardrobeScreen = () => {
                         </TouchableOpacity>
                     );
                 }}
-                
+
             />
 
-            <FlatList
+            {/* <FlatList
                 data={images}
                 numColumns={2}
                 keyExtractor={(item, index) => index.toString()}
@@ -77,11 +68,26 @@ const MyWardrobeScreen = () => {
                     <Image source={item} style={styles.imageItem} />
                 )}
                 contentContainerStyle={{ paddingBottom: 80 }} 
+            /> */}
+            
+            <FlatList
+                data={images}
+                numColumns={2}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => {
+                    console.log("MyWD Screen image:", item);
+                    return item ? (
+                        <><Image source={{ uri: item }} style={styles.image} /><Text style={styles.errorText}>OK Image</Text></>
+                    ) : (
+                        <Text style={styles.errorText}>Invalid Image</Text>
+                    );
+                }}
+                
             />
 
             {/* Nút Upload More cố định dưới màn hình */}
             <View style={styles.uploadMoreContainer}>
-                <TouchableOpacity style={styles.uploadMoreButton}>
+                <TouchableOpacity style={styles.uploadMoreButton} onPress={() => navigation.navigate("MyWardrobeUploadScreen")}>
                     <Text style={styles.buttonText}>Upload more</Text>
                 </TouchableOpacity>
             </View>
@@ -89,6 +95,7 @@ const MyWardrobeScreen = () => {
     );
 };
 export default MyWardrobeScreen;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

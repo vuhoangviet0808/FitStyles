@@ -6,16 +6,7 @@ export const CartContext = createContext();
 export const CartProvider =  ({children}) => {
     const [carts, setCarts] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
-    useEffect(() => {
-        loadCartItems();
-    }, []);
-
-    const loadCartItems = async()=> {
-        let carts = await AsyncStorage.getItem("carts");
-        carts = carts ? JSON.parse(carts) : [];
-        setCarts(carts);
-        totalSum(carts);
-    }
+    
 
     const addToCart = async (item) =>{
         const itemExist = carts.findIndex((cart) => cart.id === item.id);
